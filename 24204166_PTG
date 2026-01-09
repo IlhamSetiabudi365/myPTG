@@ -1,0 +1,152 @@
+Youtube video : https://www.youtube.com/watch?v=h6zBBG_fPdE&feature=youtu.be
+
+import java.util.ArrayList;
+
+public class PTG {
+    public static void main(String[] args) {
+        // 1. Create a list to hold all employees
+        ArrayList<Employee> staffList = new ArrayList<>();
+
+        // 2. Add employees to the list
+        // Note: Added '0' for bonus/tax placeholders in FullTime (calculated later)
+        // Note: Added '5' for overtime hours in PartTime
+        staffList.add(new FullTimeEmployee("Ilham", 'A', 98));
+        staffList.add(new Contractor("Aji", 2000, 97));
+        staffList.add(new PartTimeEmployee("Adi", 7, 5, 96)); 
+
+        // 3. Process everyone in a single loop
+        System.out.println("=== PAYROLL REPORT ===");
+        for (Employee e : staffList) {
+            e.display();
+            System.out.println("---------------------------");
+        }
+    }
+}
+
+// === BASE CLASS ===
+abstract class Employee {
+    private String name;
+    private String type;
+    private int employeeID;
+
+    public Employee(String name, String type, int employeeID) {
+        this.name = name;
+        this.type = type;
+        this.employeeID = employeeID;
+    }
+
+    abstract double calculateSalary();
+
+    public void display() {
+        System.out.println("Name   : " + this.name);
+        System.out.println("Type   : " + this.type);
+        System.out.println("ID     : " + this.employeeID);
+        System.out.printf("Salary : RM %.2f%n", calculateSalary());
+    }
+}
+
+// === SUBCLASS 1: FULL TIME ===
+class FullTimeEmployee extends Employee {
+    private char category;
+    // These attributes are now calculated on the fly to avoid "0.0" errors
+    private double bonusSalary;
+    private double taxRate;
+
+    public FullTimeEmployee(String name, char category, int employeeID) {
+        super(name, "Permanent", employeeID);
+        this.category = category;
+    }
+
+    @Override
+    public double calculateSalary() {
+        if (category == 'A' || category == 'a') return 90000;
+        if (category == 'B' || category == 'b') return 40000;
+        if (category == 'C' || category == 'c') return 20000;
+        return 0;
+    }
+
+    public double calculateBonusSalary() {
+        double base = calculateSalary(); // Fix: Get actual salary dynamically
+        if (category == 'A' || category == 'a') return 0.3 * base;
+        if (category == 'B' || category == 'b') return 0.2 * base;
+        if (category == 'C' || category == 'c') return 0.1 * base;
+        return 0;
+    }
+
+    public double calculateTaxRate() {
+        double totalIncome = calculateSalary() + calculateBonusSalary();
+        if (category == 'A' || category == 'a') return 0.05 * totalIncome;
+        if (category == 'B' || category == 'b') return 0.03 * totalIncome;
+        if (category == 'C' || category == 'c') return 0.01 * totalIncome;
+        return 0;
+    }
+
+    public void displayPosition() {
+        String position = "Staff";
+        if (category == 'A' || category == 'a') position = "Manager";
+        else if (category == 'B' || category == 'b') position = "Supervisor";
+        System.out.println("Position    : " + position);
+    }
+
+    @Override
+    public void display() {
+        super.display(); // Prints Name, ID, Base Salary
+        
+        // We assign the attributes here so they hold values
+        this.bonusSalary = calculateBonusSalary();
+        this.taxRate = calculateTaxRate();
+
+        System.out.printf("Bonus  : RM %.2f%n", this.bonusSalary);
+        System.out.printf("Tax    : RM %.2f%n", this.taxRate);
+        displayPosition();
+    }
+}
+
+// === SUBCLASS 2: CONTRACTOR ===
+class Contractor extends Employee {
+    private int totalSales;
+    private double commissionRate = 0.5;
+    public int contractDuration = 12;
+
+    public Contractor(String name, int totalSales, int employeeID) {
+        super(name, "Contract", employeeID);
+        this.totalSales = totalSales;
+    }
+
+    @Override
+    public double calculateSalary() {
+        return 500 + (totalSales * commissionRate);
+    }
+
+    @Override
+    public void display() {
+        super.display();
+        System.out.println("Duration   : " + contractDuration + " months");
+    }
+}
+
+// === SUBCLASS 3: PART TIME ===
+class PartTimeEmployee extends Employee {
+    private int workHours;
+    private int overtimeHours; // Now used!
+    private int hourlyRate = 15;
+
+    // Fix: Constructor now asks for overtime hours
+    public PartTimeEmployee(String name, int workHours, int overtimeHours, int employeeID) {
+        super(name, "Temporary", employeeID);
+        this.workHours = workHours;
+        this.overtimeHours = overtimeHours;
+    }
+
+    @Override
+    public double calculateSalary() {
+        // Base pay + (Overtime pay)
+        return (hourlyRate * workHours) + (hourlyRate * overtimeHours);
+    }
+
+    @Override
+    public void display() {
+        super.display();
+        System.out.println("Working Hours  : " + workHours + " (Normal) + " + overtimeHours + " (OT)");
+    }
+}
